@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Todo } from './todo.entity';
-import { CreateTodoDto, UpdateTodoDto } from './todo.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CreateTodoDto, UpdateTodoDto } from "./todo.dto";
+import { Todo } from "./todo.entity";
 
 @Injectable()
 export class TodoService {
