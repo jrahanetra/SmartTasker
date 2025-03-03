@@ -7,7 +7,7 @@ type PaginationProps = {
 
 export default function Pagination ({ totalPages, currentPage, handlePageChange }: PaginationProps) {
   const pageNumbers = [];
-  const maxVisiblePages = 5;
+  const maxVisiblePages = 3;
   const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 

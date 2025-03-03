@@ -41,7 +41,7 @@ export default function BasicSelect({label, options}: SelectProps) {
           fullWidth
         >
           {options.map((element, index) => (
-            <MenuItem value={element} id={index.toString()}>
+            <MenuItem key={index} value={element} id={index.toString()}>
               {element}
             </MenuItem>
           ))}

@@ -12,6 +12,14 @@ export class CreateUserDto {
     description: "firstname of the user",
   })
   firstName: string;
+
+  @ApiProperty({
+    description: "profile of the user",
+    type: 'string',
+    format: 'binary',
+    required: false,
+  })
+  file?: any;
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {}

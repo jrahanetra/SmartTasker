@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { User } from "src/user/user.entity";
 import { Repository } from "typeorm";
 import { CreateTodoDto, UpdateTodoDto } from "./todo.dto";
 import { Todo } from "./todo.entity";
@@ -9,12 +10,28 @@ export class TodoService {
   constructor(
     @InjectRepository(Todo)
     private todoRepository: Repository<Todo>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>
   ) {}
 
   // Créer un TODO
-  async create(todoData: CreateTodoDto): Promise<Todo> {
-    const todo = this.todoRepository.create(todoData);
-    return await this.todoRepository.save(todo);
+  async create(createTodoDto: CreateTodoDto): Promise<Todo> {
+    const { id_user, ...todoData } = createTodoDto;
+
+    // Récupérer l'utilisateur à partir de son ID
+    const user = await this.userRepository.findOne({ where: { id: id_user } });
+    if (!user) {
+      throw new Error("Utilisateur non trouvé");
+    }
+
+    // Créer la tâche en associant l'utilisateur
+    const newTodo = this.todoRepository.create({
+      ...todoData,
+      user,
+    });
+
+    return await this.todoRepository.save(newTodo);
   }
 
   // Récupérer tous les TODO
@@ -30,12 +47,35 @@ export class TodoService {
 
   async updateTodo(id: number, updateData: UpdateTodoDto): Promise<Todo> {
     const todo = await this.findTodoById(id);
-    Object.assign(todo, updateData);
+    const { id_user, ...todoData } = updateData;
+    const user = await this.userRepository.findOne({
+      where: { id: id_user },
+    });
+
+    if (!user) {
+      throw new Error("Utilisateur non trouvé");
+    }
+
+    // Créer la tâche en associant l'utilisateur
+    const updateDataWithUser = this.todoRepository.create({
+      ...updateData,
+      user,
+    });
+
+    Object.assign(todo, updateDataWithUser);
     return await this.todoRepository.save(todo);
   }
 
   async deleteTodo(id: number): Promise<void> {
     const todo = await this.findTodoById(id);
     await this.todoRepository.remove(todo);
+  }
+
+  async getToDoListOfUser(id_user: number): Promise<Todo[]> {
+    return await this.todoRepository
+      .createQueryBuilder("todo")
+      .where("todo.id_user = :id_user", { id_user })
+      .leftJoinAndSelect("todo.user", "user") // Si relation User existe
+      .getMany();
   }
 }

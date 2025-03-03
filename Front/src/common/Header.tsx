@@ -1,8 +1,11 @@
+import Profile from "@/models/Profile";
+
 type HeaderProps = {
   userName: string;
+  file: Profile
 };
 
-export default function Header({ userName }: HeaderProps) {
+export default function Header({ userName, file }: HeaderProps) {
   const initials = userName
     .split(" ")
     .map((name) => name[0])
@@ -30,7 +33,7 @@ export default function Header({ userName }: HeaderProps) {
         {/* Nom d'utilisateur */}
         <div className="flex">
           <h1
-            className="text-dynamic-4xl font-bold text-center"
+            className="text-dynamic-5xl font-bold text-center"
             style={{ fontFamily: "Island Moments, cursive" }}
           >
             {userName}
@@ -40,8 +43,8 @@ export default function Header({ userName }: HeaderProps) {
         {/* Image de profil */}
         <div className="flex justify-center items-center min-w-[48px] flex-shrink-0">
           <img
-            src="/Lamintsoa.jpg" // Remplace par la vraie URL de la photo
-            alt="Profil"
+            src={file.path} // Remplace par la vraie URL de la photo
+            alt={file.name}
             className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 object-cover aspect-square"
           />
         </div>

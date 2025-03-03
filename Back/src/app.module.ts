@@ -4,22 +4,19 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { TodoModule } from "./todo/todo.module";
 import { UserModule } from "./user/user.module";
+import { databaseConfig } from "./config/database.config";
+import { CloudinaryModule } from "./cloudinary/cloudinary.module";
+import { FileModule } from "./file/file.module";
 
 @Module({
   imports: [
     UserModule,
     TodoModule,
-    TypeOrmModule.forRoot({
-      type: "mysql",
-      host: "localhost",
-      port: 3306,
-      username: "Jason",
-      password: "jasonfanasina",
-      database: "todoAppBase",
-      autoLoadEntities: true,
-      synchronize: true,
+    FileModule,
+    TypeOrmModule.forRootAsync({
+      useFactory: databaseConfig,
     }),
-    UserModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

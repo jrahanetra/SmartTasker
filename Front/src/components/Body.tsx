@@ -1,11 +1,13 @@
 import BasicSelect from "@/common/Select";
 import Pagination from "@/components/Pagination";
-import { IconButton, OutlinedInput } from "@mui/material";
+import getTodos from "@/hooks/Todo";
+import Todo from "@/models/Todo";
+import { OutlinedInput } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { createSvgIcon } from "@mui/material/utils";
 import { SearchIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CardCount from "./CardCount";
 import CardTodo from "./CardTodo";
 import DateRangeCalendarCalendarsProp from "./ContainerCalendar";
@@ -27,54 +29,33 @@ const PlusIcon = createSvgIcon(
   "Plus"
 );
 
-const cards = [
-  { id: 1, title: "Plants", description: "Plants are essential for all life." },
-  { id: 2, title: "Animals", description: "Animals are a part of nature." },
-  {
-    id: 3,
-    title: "Humans",
-    description: "Humans depend on plants and animals for survival.",
-  },
-  {
-    id: 4,
-    title: "Humans",
-    description: "Humans depend on plants and animals for survival.",
-  },
-  { id: 5, title: "Plants", description: "Plants are essential for all life." },
-  { id: 6, title: "Animals", description: "Animals are a part of nature." },
-  {
-    id: 7,
-    title: "Humans",
-    description: "Humans depend on plants and animals for survival.",
-  },
-  {
-    id: 8,
-    title: "Humans",
-    description: "Humans depend on plants and animals for survival.",
-  },
-  { id: 9, title: "Plants", description: "Plants are essential for all life." },
-  { id: 10, title: "Animals", description: "Animals are a part of nature." },
-  {
-    id: 11,
-    title: "Humans",
-    description: "Humans depend on plants and animals for survival.",
-  },
-  {
-    id: 12,
-    title: "Humans",
-    description: "Humans depend on plants and animals for survival.",
-  },
-];
+interface BodyProps {
+  id: number;
+}
 
-export default function Body() {
+export default function Body({ id }: BodyProps) {
   const [selectedCard, setSelectedCard] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [cardPerPage, setCardPerPage] = useState<number>(4);
 
+  useEffect(() => {
+    getTodos({ id, setTodos });
+  }, [id]);
   const handlePageChange = (page: number) => setCurrentPage(page);
 
-  const cardPerPage = 4;
-  const totalPages = Math.ceil(cards.length / cardPerPage);
-  const currentCards = cards.slice(
+  useEffect (() => {
+    const updateCardPerPage = () => {
+      setCardPerPage(window.innerWidth < 640 ? 2 : 4);
+    }
+    updateCardPerPage();
+    window.addEventListener("resize", updateCardPerPage);
+
+    return () => window.removeEventListener("resize", updateCardPerPage)
+  }, [])
+
+  const totalPages = Math.ceil(todos.length / cardPerPage);
+  const currentTodos = todos.slice(
     (currentPage - 1) * cardPerPage,
     currentPage * cardPerPage
   );
@@ -127,9 +108,7 @@ export default function Body() {
                   borderBottomLeftRadius: "0",
                 }}
               >
-                <IconButton style={{ color: "white" }}>
-                  <PlusIcon className="h-5 w-5" />
-                </IconButton>
+                ajouter
               </Button>
             </div>
           </div>
@@ -153,13 +132,14 @@ export default function Body() {
             </div>
           </div>
           <div>
-            <div className="grid grid-cols-2 xl:gap-8 lg:gap-7 md:gap-5 sm:gap-4 xs:gap-3">
-              {currentCards.map((card, index) => (
+            <div className="grid grid-cols-2 xl:gap-8 lg:gap-7 md:gap-5 sm:gap-4 xs:gap-3 xs:grid-cols-1">
+              {currentTodos.map((todo, index) => (
                 <CardTodo
                   selectedCard={selectedCard}
                   setSelectedCard={setSelectedCard}
                   index={index}
-                  card={card}
+                  key={index}
+                  todo={todo}
                 />
               ))}
             </div>

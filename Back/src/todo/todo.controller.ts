@@ -6,8 +6,15 @@ import {
   Param,
   Post,
   Put,
+  UseInterceptors,
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import {
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CreateTodoDto, UpdateTodoDto } from "./todo.dto";
 import { TodoService } from "./todo.service";
 
@@ -32,13 +39,20 @@ export class TodoController {
     return await this.todoService.findTodoById(id);
   }
 
+  @Get("/user/:id")
+  async getUserTodos(@Param("id") id: number) {
+    return await this.todoService.getToDoListOfUser(id);
+  }
+
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("file"))
   @Post()
   @ApiOperation({ summary: "Créer un todo item" })
   @ApiResponse({ status: 201, description: "Todo crée avec succès" })
   async create(@Body() createTodoDto: CreateTodoDto) {
     return this.todoService.create(createTodoDto);
   }
-
+  
   @Put(":id")
   @ApiOperation({ summary: "Met à jour un todo" })
   async update(@Param("id") id: number, @Body() updateTodoDto: UpdateTodoDto) {

@@ -6,8 +6,16 @@ import {
   Param,
   Post,
   Put,
+  UploadedFile,
+  UseInterceptors,
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import {
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CreateUserDto, UpdateUserDto } from "./user.dto";
 import { UserService } from "./user.service";
 
@@ -37,15 +45,20 @@ export class UserController {
     return await this.userService.findOneById(id);
   }
 
-  @Post()
   @ApiOperation({ summary: "Crée un user" })
   @ApiResponse({
     status: 201,
     description: "Création de l'utilisateur",
   })
   @ApiResponse({ status: 403, description: "Accès refusé" })
-  async create(@Body() user: CreateUserDto) {
-    return await this.userService.create(user);
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("file"))
+  @Post()
+  async create(
+    @Body() user: CreateUserDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return await this.userService.create(user, file);
   }
 
   @Put(":id")
