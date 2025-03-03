@@ -1,5 +1,4 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber } from "class-validator";
 
 export class CreateTodoDto {
   @ApiProperty({
@@ -18,6 +17,7 @@ export class CreateTodoDto {
   @ApiProperty({
     example: "Fait ou En cours ou Pause ou Arrêt ou Non Fait",
     description: "Status du tâche à faire",
+    enum: ["Scheduled", "Done", "Ongoing", "Pending"],
   })
   status: string;
 

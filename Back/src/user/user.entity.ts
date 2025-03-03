@@ -1,9 +1,11 @@
+import { File } from "src/file/file.entity";
 import { Todo } from "src/todo/todo.entity";
 import {
   Column,
   Entity,
   JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
 
@@ -21,4 +23,12 @@ export class User {
   @OneToMany(() => Todo, (todo) => todo.user)
   @JoinColumn()
   todos: Todo[];
+
+  @OneToOne(() => File, (file) => file.user, {
+    cascade: true,
+    nullable: true,
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "id_profile" })
+  file?: File;
 }

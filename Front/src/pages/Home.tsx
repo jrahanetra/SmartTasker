@@ -1,12 +1,21 @@
 import Footer from "@/common/Footer";
+import getUserById from "@/hooks/User";
+import User from "@/models/User";
+import { useEffect, useState } from "react";
 import Header from "../common/Header";
 import Body from "../components/Body";
+import Profile from "@/models/Profile";
 
 export default function Home() {
-  const userName = "Lamintsoa ANDRIAMIHAJA";
+  const [idUser, setIdUser] = useState<number>(3);
+  const [user, setUser] = useState<User>(null);
+  useEffect(() => {
+   getUserById({id:idUser, setUser})
+  }, [])
+  const userName = `${user?.firstName} ${user?.name}`
   return (
     <div className="flex flex-col w-full h-full items-center bg-white">
-      <Header userName={userName} />
+      <Header userName={userName} file={user?.file}/>
       <div className="w-full xl:mt-24 lg:mt-24 md:mt-24 sm:mt-20 justify-center text-center xs:mt-20">
         <h1
           className="text-dynamic-5xl font-bold"
@@ -17,9 +26,9 @@ export default function Home() {
         </h1>
       </div>
       <div className="flex justify-center w-full xl:mt-8 lg:mt-5 md:mt-4 sm:mt-4 xs:mt-4">
-        <Body />
+        <Body id={idUser}/>
       </div>
-      <div className="absolute  bottom-4 left-4">
+      <div className="absolute  bottom-4 left-4"> 
         <span className="sm:hidden">xs</span>
         <span className="hidden sm:block md:hidden">sm</span>
         <span className="hidden md:block lg:hidden">md</span>
