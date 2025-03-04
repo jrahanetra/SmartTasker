@@ -1,17 +1,17 @@
 import BasicSelect from "@/common/Select";
 import Pagination from "@/components/Pagination";
-import getTodos, { postTodo } from "@/hooks/Todo";
-import Todo from "@/models/Todo";
+import { addTodo, fetchTodos } from "@/store/reducers/TodoSlice";
+import { AppDispatch, RootState } from "@/store/store";
 import { OutlinedInput } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { createSvgIcon } from "@mui/material/utils";
 import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import CardCount from "./CardCount";
 import CardTodo from "./CardTodo";
 import DateRangeCalendarCalendarsProp from "./ContainerCalendar";
-import dayjs, { Dayjs } from "dayjs";
 
 const PlusIcon = createSvgIcon(
   <svg
@@ -39,13 +39,14 @@ export default function Body({ id }: BodyProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [cardPerPage, setCardPerPage] = useState<number>(4);
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    items: todos,
+    status,
+    error,
+  } = useSelector((state: RootState) => state.todos);
 
-  useEffect(() => {
-    getTodos({ id, setTodos });
-  }, [id]);
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  const [cardPerPage, setCardPerPage] = useState<number>(4);
 
   useEffect(() => {
     const updateCardPerPage = () => {
@@ -55,7 +56,17 @@ export default function Body({ id }: BodyProps) {
     window.addEventListener("resize", updateCardPerPage);
 
     return () => window.removeEventListener("resize", updateCardPerPage);
-  }, []);
+  }, []); 
+
+  // 🔹 Charger les todos au montage du composant
+  useEffect(() => {
+    dispatch(fetchTodos(id));
+  }, [dispatch, id]);
+
+  if (status === "loading") return <p>Chargement...</p>;
+  if (status === "failed") return <p>Erreur : {error}</p>;
+
+  const handlePageChange = (page: number) => setCurrentPage(page);
 
   const totalPages = Math.ceil(todos.length / cardPerPage);
   const currentTodos = todos.slice(
@@ -70,10 +81,12 @@ export default function Body({ id }: BodyProps) {
       status: "Scheduled",
       dateOfCreation: new Date(),
       dateOfEnding: null,
-      id_user: id
+      id_user: id,
     };
-    postTodo(newTodo)
-  }
+    dispatch(addTodo(newTodo));
+    setTitle("");
+    setDescription("");
+  };
 
   return (
     <div className="w-[90%] h-full rounded-3xl mx-auto bg-[#FAF7F2] p-4">

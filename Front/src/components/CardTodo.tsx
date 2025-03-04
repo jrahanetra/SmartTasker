@@ -5,6 +5,10 @@ import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import { Edit, Trash2 } from "lucide-react";
 import React from "react";
+import { useDispatch } from "react-redux";
+import { deleteTodo } from "@/store/reducers/TodoSlice";
+import { AppDispatch } from "@/store/store";
+
 
 type CardTodoProps = {
   selectedCard: number;
@@ -19,10 +23,14 @@ export default function CardTodo({
   index,
   todo,
 }: CardTodoProps) {
+  const dispatch = useDispatch<AppDispatch>()
   const dateOfCreation = todo.dateOfCreation
     ? dayjs(todo.dateOfCreation).format("DD MMM YYYY")
     : "Pas de date";
-
+  
+  const handleDeleteTodo = () => {
+    dispatch(deleteTodo(todo.id));
+  }
   return (
     <Card key={index}>
       <div
@@ -68,7 +76,7 @@ export default function CardTodo({
             <IconButton style={{ color: "black" }}>
               <Edit className="h-7 w-7" />
             </IconButton>
-            <IconButton style={{ color: "black" }}>
+            <IconButton style={{ color: "black" }} onClick={handleDeleteTodo}>
               <Trash2 className="h-7 w-7" />
             </IconButton>
           </div>
