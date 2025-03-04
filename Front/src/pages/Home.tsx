@@ -7,7 +7,7 @@ import Body from "../components/Body";
 import Profile from "@/models/Profile";
 
 export default function Home() {
-  const [idUser, setIdUser] = useState<number>(3);
+  const [idUser, setIdUser] = useState<number>(1);
   const [user, setUser] = useState<User>(null);
   useEffect(() => {
    getUserById({id:idUser, setUser})
