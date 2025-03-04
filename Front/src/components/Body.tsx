@@ -1,6 +1,6 @@
 import BasicSelect from "@/common/Select";
 import Pagination from "@/components/Pagination";
-import getTodos from "@/hooks/Todo";
+import getTodos, { postTodo } from "@/hooks/Todo";
 import Todo from "@/models/Todo";
 import { OutlinedInput } from "@mui/material";
 import Button from "@mui/material/Button";
@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import CardCount from "./CardCount";
 import CardTodo from "./CardTodo";
 import DateRangeCalendarCalendarsProp from "./ContainerCalendar";
+import dayjs, { Dayjs } from "dayjs";
 
 const PlusIcon = createSvgIcon(
   <svg
@@ -36,6 +37,8 @@ interface BodyProps {
 export default function Body({ id }: BodyProps) {
   const [selectedCard, setSelectedCard] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
   const [todos, setTodos] = useState<Todo[]>([]);
   const [cardPerPage, setCardPerPage] = useState<number>(4);
 
@@ -44,21 +47,33 @@ export default function Body({ id }: BodyProps) {
   }, [id]);
   const handlePageChange = (page: number) => setCurrentPage(page);
 
-  useEffect (() => {
+  useEffect(() => {
     const updateCardPerPage = () => {
       setCardPerPage(window.innerWidth < 640 ? 2 : 4);
-    }
+    };
     updateCardPerPage();
     window.addEventListener("resize", updateCardPerPage);
 
-    return () => window.removeEventListener("resize", updateCardPerPage)
-  }, [])
+    return () => window.removeEventListener("resize", updateCardPerPage);
+  }, []);
 
   const totalPages = Math.ceil(todos.length / cardPerPage);
   const currentTodos = todos.slice(
     (currentPage - 1) * cardPerPage,
     currentPage * cardPerPage
   );
+
+  const submitNewTodo = () => {
+    const newTodo = {
+      title: title,
+      description: description,
+      status: "Scheduled",
+      dateOfCreation: new Date(),
+      dateOfEnding: null,
+      id_user: id
+    };
+    postTodo(newTodo)
+  }
 
   return (
     <div className="w-[90%] h-full rounded-3xl mx-auto bg-[#FAF7F2] p-4">
@@ -82,6 +97,8 @@ export default function Body({ id }: BodyProps) {
             <div className="grid grid-cols-[0.5fr_1fr_0.2fr] gap-2 xl:gap-7 lg:gap-6 md:gap-4 sm:gap-3 xs:gap-2 w-full">
               <TextField
                 id="outlined-basic"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 label="Title"
                 variant="outlined"
                 className="ml-3"
@@ -91,6 +108,8 @@ export default function Body({ id }: BodyProps) {
               />
               <TextField
                 id="outlined-basic"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 label="Detail"
                 variant="outlined"
                 style={{
@@ -107,6 +126,7 @@ export default function Body({ id }: BodyProps) {
                   borderTopLeftRadius: "0",
                   borderBottomLeftRadius: "0",
                 }}
+                onClick={submitNewTodo}
               >
                 ajouter
               </Button>

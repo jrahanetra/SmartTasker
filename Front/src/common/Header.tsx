@@ -11,7 +11,7 @@ export default function Header({ userName, file }: HeaderProps) {
     .map((name) => name[0])
     .join("");
 
-  return (
+    return (
     <div
       className="flex justify-center fixed w-full shadow-xl z-10"
       style={{ backgroundColor: "#F2EAEA" }}
@@ -43,8 +43,8 @@ export default function Header({ userName, file }: HeaderProps) {
         {/* Image de profil */}
         <div className="flex justify-center items-center min-w-[48px] flex-shrink-0">
           <img
-            src={file.path} // Remplace par la vraie URL de la photo
-            alt={file.name}
+            src={file?.path} // Remplace par la vraie URL de la photo
+            alt={file?.name}
             className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 object-cover aspect-square"
           />
         </div>
