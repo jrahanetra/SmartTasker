@@ -1,20 +1,28 @@
-import * as React from "react";
 import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 
 type SelectProps = {
   label: string;
   options: string[];
-}
+  filter: string;
+  setFilter: (filter: string) => void;
+};
 
-export default function BasicSelect({label, options}: SelectProps) {
-  const [filter, setFilter] = React.useState("");
-
+export default function BasicSelect({
+  label,
+  options,
+  filter,
+  setFilter,
+}: SelectProps) {
   const handleChange = (event: SelectChangeEvent) => {
-    setFilter(event.target.value as string);
+    if (event.target.value === "None") {
+      setFilter("");
+    } else {
+      setFilter(event.target.value as string);
+    }
   };
 
   return (
@@ -26,10 +34,7 @@ export default function BasicSelect({label, options}: SelectProps) {
       }}
     >
       <FormControl fullWidth>
-        <InputLabel
-          id="demo-simple-select-label"
-          style={{ color: "black"}}
-        >
+        <InputLabel id="demo-simple-select-label" style={{ color: "black" }}>
           {label}
         </InputLabel>
         <Select

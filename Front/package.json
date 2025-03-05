@@ -17,6 +17,7 @@
     "@mui/material": "^6.4.2",
     "@mui/x-date-pickers": "^7.25.0",
     "@radix-ui/react-slot": "^1.1.1",
+    "@reduxjs/toolkit": "^2.6.0",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "dayjs": "^1.11.13",
@@ -25,6 +26,7 @@
     "path": "^0.12.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.4",
     "tailwind-merge": "^3.0.1"
   },

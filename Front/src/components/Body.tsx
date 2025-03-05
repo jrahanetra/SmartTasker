@@ -1,34 +1,17 @@
 import BasicSelect from "@/common/Select";
 import Pagination from "@/components/Pagination";
-import getTodos, { postTodo } from "@/hooks/Todo";
-import Todo from "@/models/Todo";
+import { Todo } from "@/models/Todo";
+import { addTodo, fetchTodos } from "@/store/reducers/TodoSlice";
+import { AppDispatch, RootState } from "@/store/store";
 import { OutlinedInput } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { createSvgIcon } from "@mui/material/utils";
 import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import CardCount from "./CardCount";
 import CardTodo from "./CardTodo";
 import DateRangeCalendarCalendarsProp from "./ContainerCalendar";
-import dayjs, { Dayjs } from "dayjs";
-
-const PlusIcon = createSvgIcon(
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="currentColor"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 4.5v15m7.5-7.5h-15"
-    />
-  </svg>,
-  "Plus"
-);
 
 interface BodyProps {
   id: number;
@@ -39,13 +22,18 @@ export default function Body({ id }: BodyProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [cardPerPage, setCardPerPage] = useState<number>(4);
+  const [filterDate, setFilterDate] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
 
-  useEffect(() => {
-    getTodos({ id, setTodos });
-  }, [id]);
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    items: todos,
+    status,
+    error,
+  } = useSelector((state: RootState) => state.todos);
+
+  const [cardPerPage, setCardPerPage] = useState<number>(4);
 
   useEffect(() => {
     const updateCardPerPage = () => {
@@ -57,11 +45,38 @@ export default function Body({ id }: BodyProps) {
     return () => window.removeEventListener("resize", updateCardPerPage);
   }, []);
 
+  // 🔹 Charger les todos au montage du composant
+  useEffect(() => {
+    dispatch(fetchTodos(id));
+  }, [dispatch, id]);
+
+  if (status === "loading") return <p>Chargement...</p>;
+  if (status === "failed") return <p>Erreur : {error}</p>;
+
+  const handlePageChange = (page: number) => setCurrentPage(page);
+
   const totalPages = Math.ceil(todos.length / cardPerPage);
-  const currentTodos = todos.slice(
-    (currentPage - 1) * cardPerPage,
-    currentPage * cardPerPage
-  );
+  const currentTodos = [...todos]
+    .sort((a: Todo, b: Todo) => {
+      if (filterDate === "Recently")
+        return (
+          new Date(a.dateOfCreation).getTime() -
+          new Date(b.dateOfCreation).getTime()
+        );
+      else if (filterDate === "Oldest")
+        return (
+          new Date(b.dateOfCreation).getTime() -
+          new Date(a.dateOfCreation).getTime()
+        );
+      return 0;
+    })
+    .filter((todo: Todo) => {
+      return todo.title
+        .toLowerCase()
+        .trim()
+        .includes(filterSearch.toLowerCase().trim());
+    })
+    .slice((currentPage - 1) * cardPerPage, currentPage * cardPerPage);
 
   const submitNewTodo = () => {
     const newTodo = {
@@ -70,10 +85,12 @@ export default function Body({ id }: BodyProps) {
       status: "Scheduled",
       dateOfCreation: new Date(),
       dateOfEnding: null,
-      id_user: id
+      id_user: id,
     };
-    postTodo(newTodo)
-  }
+    dispatch(addTodo(newTodo));
+    setTitle("");
+    setDescription("");
+  };
 
   return (
     <div className="w-[90%] h-full rounded-3xl mx-auto bg-[#FAF7F2] p-4">
@@ -136,15 +153,21 @@ export default function Body({ id }: BodyProps) {
             <div className="grid grid-cols-[0.5fr_0.5fr_1fr] gap-2 xl:gap-7 lg:gap-6 md:gap-4 sm:gap-3 xs:gap-2 w-full">
               <BasicSelect
                 label="By date"
-                options={["Recently", "Past", "Future"]}
+                options={["None", "Recently", "Oldest"]}
+                filter={filterDate}
+                setFilter={setFilterDate}
               />
               <BasicSelect
                 label="By status"
-                options={["Done", "Ongoing", "Pending", "Scheduled"]}
+                options={["None", "Done", "Ongoing", "Pending", "Scheduled"]}
+                filter={filterStatus}
+                setFilter={setFilterStatus}
               />
               <OutlinedInput
                 id="outlined-adornment-password"
                 endAdornment={<SearchIcon />}
+                value={filterSearch}
+                onChange={e => {setFilterSearch(e.target.value)}}
                 placeholder="Search by name"
                 className="justify-self-end"
                 style={{ borderColor: "#F0D1A8" }}
