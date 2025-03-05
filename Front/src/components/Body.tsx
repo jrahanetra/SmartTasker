@@ -1,34 +1,17 @@
 import BasicSelect from "@/common/Select";
 import Pagination from "@/components/Pagination";
+import { Todo } from "@/models/Todo";
 import { addTodo, fetchTodos } from "@/store/reducers/TodoSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { OutlinedInput } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { createSvgIcon } from "@mui/material/utils";
 import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CardCount from "./CardCount";
 import CardTodo from "./CardTodo";
 import DateRangeCalendarCalendarsProp from "./ContainerCalendar";
-
-const PlusIcon = createSvgIcon(
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="currentColor"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 4.5v15m7.5-7.5h-15"
-    />
-  </svg>,
-  "Plus"
-);
 
 interface BodyProps {
   id: number;
@@ -39,6 +22,10 @@ export default function Body({ id }: BodyProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [filterDate, setFilterDate] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+
   const dispatch = useDispatch<AppDispatch>();
   const {
     items: todos,
@@ -56,7 +43,7 @@ export default function Body({ id }: BodyProps) {
     window.addEventListener("resize", updateCardPerPage);
 
     return () => window.removeEventListener("resize", updateCardPerPage);
-  }, []); 
+  }, []);
 
   // 🔹 Charger les todos au montage du composant
   useEffect(() => {
@@ -69,10 +56,27 @@ export default function Body({ id }: BodyProps) {
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   const totalPages = Math.ceil(todos.length / cardPerPage);
-  const currentTodos = todos.slice(
-    (currentPage - 1) * cardPerPage,
-    currentPage * cardPerPage
-  );
+  const currentTodos = [...todos]
+    .sort((a: Todo, b: Todo) => {
+      if (filterDate === "Recently")
+        return (
+          new Date(a.dateOfCreation).getTime() -
+          new Date(b.dateOfCreation).getTime()
+        );
+      else if (filterDate === "Oldest")
+        return (
+          new Date(b.dateOfCreation).getTime() -
+          new Date(a.dateOfCreation).getTime()
+        );
+      return 0;
+    })
+    .filter((todo: Todo) => {
+      return todo.title
+        .toLowerCase()
+        .trim()
+        .includes(filterSearch.toLowerCase().trim());
+    })
+    .slice((currentPage - 1) * cardPerPage, currentPage * cardPerPage);
 
   const submitNewTodo = () => {
     const newTodo = {
@@ -149,15 +153,21 @@ export default function Body({ id }: BodyProps) {
             <div className="grid grid-cols-[0.5fr_0.5fr_1fr] gap-2 xl:gap-7 lg:gap-6 md:gap-4 sm:gap-3 xs:gap-2 w-full">
               <BasicSelect
                 label="By date"
-                options={["Recently", "Past", "Future"]}
+                options={["None", "Recently", "Oldest"]}
+                filter={filterDate}
+                setFilter={setFilterDate}
               />
               <BasicSelect
                 label="By status"
-                options={["Done", "Ongoing", "Pending", "Scheduled"]}
+                options={["None", "Done", "Ongoing", "Pending", "Scheduled"]}
+                filter={filterStatus}
+                setFilter={setFilterStatus}
               />
               <OutlinedInput
                 id="outlined-adornment-password"
                 endAdornment={<SearchIcon />}
+                value={filterSearch}
+                onChange={e => {setFilterSearch(e.target.value)}}
                 placeholder="Search by name"
                 className="justify-self-end"
                 style={{ borderColor: "#F0D1A8" }}

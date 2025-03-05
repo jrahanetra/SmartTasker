@@ -1,4 +1,4 @@
-import Todo from "@/models/Todo";
+import { Todo } from "@/models/Todo";
 import { Card, IconButton } from "@mui/material";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
@@ -48,7 +48,7 @@ export default function CardTodo({
               component="div"
               style={{ fontSize: "var(--text-2xl)" }}
             >
-              {todo.id}
+              {todo.status}
             </Typography>
             <Typography
               variant="h5"
