@@ -3,11 +3,14 @@ import Pagination from "@/components/Pagination";
 import { Todo } from "@/models/Todo";
 import { addTodo, fetchTodos } from "@/store/reducers/TodoSlice";
 import { AppDispatch, RootState } from "@/store/store";
+import isValidTodo from "@/utils/dataTodoValidation";
 import { OutlinedInput } from "@mui/material";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { Toaster, toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import CardCount from "./CardCount";
 import CardTodo from "./CardTodo";
@@ -17,14 +20,24 @@ interface BodyProps {
   id: number;
 }
 
+interface FormTodo {
+  detail: string;
+  title: string;
+}
+
 export default function Body({ id }: BodyProps) {
   const [selectedCard, setSelectedCard] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+  const [borderStyle, setBorderStyle] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormTodo>();
 
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -60,15 +73,18 @@ export default function Body({ id }: BodyProps) {
     .sort((a: Todo, b: Todo) => {
       if (filterDate === "Recently")
         return (
-          new Date(a.dateOfCreation).getTime() -
-          new Date(b.dateOfCreation).getTime()
-        );
-      else if (filterDate === "Oldest")
-        return (
           new Date(b.dateOfCreation).getTime() -
           new Date(a.dateOfCreation).getTime()
         );
+      else if (filterDate === "Oldest")
+        return (
+          new Date(a.dateOfCreation).getTime() -
+          new Date(b.dateOfCreation).getTime()
+        );
       return 0;
+    })
+    .filter((todo: Todo) => {
+      return filterStatus ? todo.status === filterStatus : true;
     })
     .filter((todo: Todo) => {
       return todo.title
@@ -78,22 +94,45 @@ export default function Body({ id }: BodyProps) {
     })
     .slice((currentPage - 1) * cardPerPage, currentPage * cardPerPage);
 
-  const submitNewTodo = () => {
+  const submitNewTodo = (data: FormTodo) => {
     const newTodo = {
-      title: title,
-      description: description,
+      title: data.title,
+      description: data.detail,
       status: "Scheduled",
       dateOfCreation: new Date(),
       dateOfEnding: null,
       id_user: id,
     };
-    dispatch(addTodo(newTodo));
-    setTitle("");
-    setDescription("");
+    const dataVerification = isValidTodo(newTodo);
+    if (dataVerification.valid) {
+      dispatch(addTodo(newTodo));
+    } else {
+      setBorderStyle("1px solid red");
+      let errorMess: string = "";
+      dataVerification.errors.map((error: string) => {
+        switch (error) {
+          case "Title":
+            errorMess = errorMess.concat("Title shoud not be empty.\n");
+            break;
+          case "Description":
+            errorMess = errorMess.concat("Description shoud not be empty.");
+            break;
+        }
+      });
+      toast.error(errorMess);
+    }
+  };
+
+  const onSubmit: SubmitHandler<FormTodo> = (data) => {
+    submitNewTodo(data);
+    reset();
   };
 
   return (
     <div className="w-[90%] h-full rounded-3xl mx-auto bg-[#FAF7F2] p-4">
+      <div>
+        <Toaster position="bottom-right" />
+      </div>
       <div className="flex flex-col lg:flex-row lg:gap-10">
         <div className="flex flex-row xl:flex-col lg:flex-col w-full xl:w-[25%] mt-8">
           <div className="w-full flex flex-col xs:flex-row xs:gap-8 xs:justify-center">
@@ -111,30 +150,60 @@ export default function Body({ id }: BodyProps) {
         </div>
         <div className="w-full xl:w-[75%] mt-8 xl:mt-0">
           <div className="flex mb-4">
-            <div className="grid grid-cols-[0.5fr_1fr_0.2fr] gap-2 xl:gap-7 lg:gap-6 md:gap-4 sm:gap-3 xs:gap-2 w-full">
-              <TextField
-                id="outlined-basic"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                label="Title"
-                variant="outlined"
-                className="ml-3"
-                style={{
-                  backgroundColor: "#DBE2EF",
-                }}
-              />
-              <TextField
-                id="outlined-basic"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                label="Detail"
-                variant="outlined"
-                style={{
-                  backgroundColor: "#DBE2EF",
-                }}
-              />
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="grid grid-cols-[0.5fr_1fr_0.2fr] gap-2 xl:gap-7 lg:gap-6 md:gap-4 sm:gap-3 xs:gap-2 w-full"
+            >
+              <div>
+                <TextField
+                  id="outlined-basic"
+                  fullWidth
+                  // onChange={(e) => setTitle(e.target.value)}
+                  label="Title"
+                  variant="outlined"
+                  className="ml-3"
+                  {...register("title", {
+                    required: "First Name is required.",
+                  })}
+                  error={Boolean(errors.title)}
+                  style={{
+                    backgroundColor: "#DBE2EF",
+                    border: borderStyle,
+                    borderRadius: "5px",
+                  }}
+                />
+                {errors.title?.message && (
+                  <p className="pl-1" style={{ color: "red" }}>
+                    {errors.title?.message?.toString()}
+                  </p>
+                )}
+              </div>
+              <div>
+                <TextField
+                  id="outlined-basic"
+                  fullWidth
+                  label="Detail"
+                  variant="outlined"
+                  {...register("detail", {
+                    required: "Detail about the task is required.",
+                  })}
+                  error={Boolean(errors.detail)}
+                  style={{
+                    backgroundColor: "#DBE2EF",
+                    border: borderStyle,
+                    borderRadius: "5px",
+                  }}
+                />
+                {errors.detail?.message && (
+                  <p className="pl-1" style={{ color: "red" }}>
+                    {errors.detail?.message?.toString()}
+                  </p>
+                )}
+              </div>
+
               <Button
                 variant="contained"
+                type="submit"
                 className="flex justify-center items-center text-center bg-slate-500"
                 style={{
                   backgroundColor: "#5C9967",
@@ -143,11 +212,10 @@ export default function Body({ id }: BodyProps) {
                   borderTopLeftRadius: "0",
                   borderBottomLeftRadius: "0",
                 }}
-                onClick={submitNewTodo}
               >
                 ajouter
               </Button>
-            </div>
+            </form>
           </div>
           <div className="flex mb-4">
             <div className="grid grid-cols-[0.5fr_0.5fr_1fr] gap-2 xl:gap-7 lg:gap-6 md:gap-4 sm:gap-3 xs:gap-2 w-full">
@@ -167,7 +235,9 @@ export default function Body({ id }: BodyProps) {
                 id="outlined-adornment-password"
                 endAdornment={<SearchIcon />}
                 value={filterSearch}
-                onChange={e => {setFilterSearch(e.target.value)}}
+                onChange={(e) => {
+                  setFilterSearch(e.target.value);
+                }}
                 placeholder="Search by name"
                 className="justify-self-end"
                 style={{ borderColor: "#F0D1A8" }}

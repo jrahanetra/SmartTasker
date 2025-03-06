@@ -1,14 +1,14 @@
 import { Todo } from "@/models/Todo";
+import { deleteTodo } from "@/store/reducers/TodoSlice";
+import { AppDispatch } from "@/store/store";
 import { Card, IconButton } from "@mui/material";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import { Edit, Trash2 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { deleteTodo } from "@/store/reducers/TodoSlice";
-import { AppDispatch } from "@/store/store";
-
+import TodoModal from "./ModalEdit";
 
 type CardTodoProps = {
   selectedCard: number;
@@ -23,14 +23,24 @@ export default function CardTodo({
   index,
   todo,
 }: CardTodoProps) {
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const dateOfCreation = todo.dateOfCreation
     ? dayjs(todo.dateOfCreation).format("DD MMM YYYY")
     : "Pas de date";
-  
+
   const handleDeleteTodo = () => {
     dispatch(deleteTodo(todo.id));
-  }
+  };
+
+  const opendModalEdit = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false)
+  };
   return (
     <Card key={index}>
       <div
@@ -73,7 +83,7 @@ export default function CardTodo({
             </Typography>
           </div>
           <div className="flex flex-col items-end">
-            <IconButton style={{ color: "black" }}>
+            <IconButton style={{ color: "black" }} onClick={opendModalEdit}>
               <Edit className="h-7 w-7" />
             </IconButton>
             <IconButton style={{ color: "black" }} onClick={handleDeleteTodo}>
@@ -82,6 +92,9 @@ export default function CardTodo({
           </div>
         </CardContent>
       </div>
+      {isModalOpen && (
+        <TodoModal todo={todo} onClose={handleClose} />
+      )}
     </Card>
   );
 }
