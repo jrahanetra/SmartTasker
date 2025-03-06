@@ -71,6 +71,9 @@ export default function Body({ id }: BodyProps) {
       return 0;
     })
     .filter((todo: Todo) => {
+      return filterStatus? todo.status === filterStatus: true;
+    })
+    .filter((todo: Todo) => {
       return todo.title
         .toLowerCase()
         .trim()
@@ -167,7 +170,9 @@ export default function Body({ id }: BodyProps) {
                 id="outlined-adornment-password"
                 endAdornment={<SearchIcon />}
                 value={filterSearch}
-                onChange={e => {setFilterSearch(e.target.value)}}
+                onChange={(e) => {
+                  setFilterSearch(e.target.value);
+                }}
                 placeholder="Search by name"
                 className="justify-self-end"
                 style={{ borderColor: "#F0D1A8" }}
